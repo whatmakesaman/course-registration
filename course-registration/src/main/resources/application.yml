@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: course-registration
+
+  # 데이터베이스 연결 설정
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # MySQL 8.0 이상 보안 설정을 위해 allowPublicKeyRetrieval=true를 추가했습니다.
+    url: jdbc:mysql://localhost:3306/sugang?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: root
+    password: qkdwnsgur1!
+
+  # JPA 및 Hibernate 설정
+  jpa:
+    hibernate:
+      # 엔티티를 보고 테이블을 자동으로 생성/수정해줍니다.
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    # MySQL 엔진을 명확히 지정해줍니다.
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+  jwt:
+    secret: vmfhaltmskdlstkfkdgodyroqkfwkdghksruddmstkfkdgody123456789

@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'studio.thinkground'
+version = '0.0.1-SNAPSHOT'
+description = 'course-registration'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. 웹 & 화면 (Web, Thymeleaf)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-validation' // 입력값 검증용
+
+    // 2. 데이터베이스 (JPA + MySQL)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j' // MySQL 드라이버
+
+    // 3. 보안 & JWT (Security + JJWT)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT 라이브러리 (0.11.5 버전이 가장 안정적이고 예제도 많음)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // 4. 편의 도구 (Lombok)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 5. 테스트 (기본 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test' // 시큐리티 테스트용
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

@@ -11,6 +11,8 @@ import studio.thinkground.courseregistration.entity.Student;
 import studio.thinkground.courseregistration.repository.AdminRepository;
 import studio.thinkground.courseregistration.repository.StudentRepository;
 
+import javax.sound.midi.Soundbank;
+
 @Service
 public class CustomUserDetailService implements UserDetailsService {
         private  final StudentRepository studentRepository;
@@ -28,16 +30,23 @@ public class CustomUserDetailService implements UserDetailsService {
         @Override
         public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException
         {
+            System.out.println("로그인 시도: "+id);
             Student student=studentRepository.findByStudentNumber(id);
             if(student!=null)
             {
+                System.out.println("학생 발견, 비밀번호: "+student.getPassword());
                 return new CustomUserDetails(student);
+            }
+            else {
+                System.out.println("학생 테이블에 없음");
             }
             Admin admin=adminRepository.findByLoginId(id);
             if(admin!=null)
             {
+                System.out.println("관리자 발견");
                 return new CustomUserDetails(admin);
             }
+            System.out.println("아무것도 못찾음");
             throw new UsernameNotFoundException("error"+id);
         }
 

@@ -5,7 +5,7 @@ import lombok.*;
 import studio.thinkground.courseregistration.domain.Role;
 
 @Table(name="students")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Getter
 @Setter
 @Entity

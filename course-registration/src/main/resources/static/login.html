@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>수강신청 시스템</title>
+    <style>
+        /* --- 1. 기본 스타일 --- */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* --- 2. 전체 컨테이너 --- */
+        .login-wrapper {
+            background: white;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding-bottom: 30px;
+        }
+
+        .agt_nm {
+            text-align: center;
+            padding: 20px 0;
+            margin: 0;
+            background-color: #343a40;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        /* --- 3. 탭 (Tab) 스타일 --- */
+        .login_tab ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .login_tab li {
+            flex: 1;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+
+        .login_tab li a {
+            display: block;
+            padding: 15px 0;
+            text-decoration: none;
+            color: #666;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        /* 활성화된 탭 스타일 */
+        .login_tab li.on {
+            background-color: #fff;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .login_tab li.on a {
+            color: #007bff;
+        }
+
+        /* --- 4. 로그인 폼 내용 --- */
+        .log_cont_wrap {
+            padding: 30px 20px;
+        }
+
+        .login_cont {
+            display: none; /* 기본적으로 숨김 */
+        }
+
+        /* 활성화된 내용만 보이게 */
+        .login_cont.active {
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .join-link {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .join-link a {
+            color: #666;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <h2 class="agt_nm">수강신청 로그인</h2>
+
+    <div class="login_tab">
+        <ul>
+            <li id="tabStudent" class="on" onclick="switchTab('student')">
+                <a href="#">학생 로그인</a>
+            </li>
+            <li id="tabAdmin" onclick="switchTab('admin')">
+                <a href="#">관리자 로그인</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="log_cont_wrap">
+
+        <div id="loginTab01" class="login_cont active">
+            <input type="text" id="studentId" placeholder="학번 (예: 20241234)">
+            <input type="password" id="studentPw" placeholder="비밀번호">
+            <button onclick="login('student')">학생 로그인</button>
+            <div class="join-link">
+                계정이 없으신가요? <a href="/join.html">학생 회원가입</a>
+            </div>
+        </div>
+
+        <div id="loginTab02" class="login_cont">
+            <input type="text" id="adminId" placeholder="관리자 ID">
+            <input type="password" id="adminPw" placeholder="비밀번호">
+            <button onclick="login('admin')">관리자 로그인</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // --- 1. 탭 전환 함수 ---
+    function switchTab(type) {
+        // 모든 탭의 'on' 클래스 제거
+        document.getElementById('tabStudent').classList.remove('on');
+        document.getElementById('tabAdmin').classList.remove('on');
+
+        // 모든 내용의 'active' 클래스 제거
+        document.getElementById('loginTab01').classList.remove('active');
+        document.getElementById('loginTab02').classList.remove('active');
+
+        if (type === 'student') {
+            document.getElementById('tabStudent').classList.add('on');
+            document.getElementById('loginTab01').classList.add('active');
+        } else {
+            document.getElementById('tabAdmin').classList.add('on');
+            document.getElementById('loginTab02').classList.add('active');
+        }
+    }
+
+    // --- 2. 로그인 요청 함수 ---
+    function login(type) {
+        let username, password;
+
+        // 어느 탭에서 눌렀는지에 따라 값 가져오기
+        if (type === 'student') {
+            username = document.getElementById('studentId').value;
+            password = document.getElementById('studentPw').value;
+        } else {
+            username = document.getElementById('adminId').value;
+            password = document.getElementById('adminPw').value;
+        }
+
+        if (!username || !password) {
+            alert("아이디와 비밀번호를 입력해주세요.");
+            return;
+        }
+
+        // 백엔드로 보낼 데이터 준비
+        const formData = new URLSearchParams();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        // fetch 요청 (엔드포인트는 /login 하나로 통일되어 있음)
+        fetch('/login', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // 헤더에서 토큰 꺼내기
+                const token = response.headers.get('Authorization');
+
+                if (token) {
+                    // 토큰 저장
+                    localStorage.setItem('accessToken', token);
+                    localStorage.setItem('role', type); // 편의상 역할도 저장해둠
+
+                    alert(type === 'student' ? "학생 로그인 성공!" : "관리자 로그인 성공!");
+
+                    // 역할에 따라 페이지 이동 (나중에 페이지 만들면 주석 해제)
+                    if (type === 'student') {
+                         window.location.href = '/course-list.html'; // 학생 메인
+                    } else {
+                         window.location.href = '/admin-dashboard.html'; // 관리자 메인
+                    }
+
+                } else {
+                    alert("토큰 발급 실패");
+                }
+            } else {
+                alert("로그인 실패! 아이디나 비밀번호를 확인하세요."); // 401 뜰 때
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("서버 오류가 발생했습니다.");
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -3,42 +3,68 @@ package studio.thinkground.courseregistration.jwt;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
- //                              세션에서 사용하는 기능, '로그인을 검사하는 타이밍'은 같아서 사용
+import studio.thinkground.courseregistration.dto.CustomUserDetails;
+
+import java.util.Collection;
+import java.util.Iterator;
+
 public class loginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
+    private final JWTUtil jwtUtil;
 
-    public loginFilter(AuthenticationManager authenticationManager)
-    {
-        this.authenticationManager=authenticationManager;
+    public loginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
-    @Override                                   //서버 뜯어서 확인,              서버가 채워서 보냄
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException
-    {
-        String id=obtainUsername(request);
-        String password=obtainPassword(request);
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
-        //username과 password를 검증하기 위해 토큰에 담음
-        UsernamePasswordAuthenticationToken authToken=new UsernamePasswordAuthenticationToken(id,password,null);
-        //토큰을 확인해서 보낼지 말지
+        // 1. 요청에서 아이디, 비번 추출
+        String id = obtainUsername(request);
+        String password = obtainPassword(request);
+
+        // 2. 스프링 시큐리티에게 검증 요청
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(id, password, null);
+
         return authenticationManager.authenticate(authToken);
     }
-    //로그인 성공시 실행하는 메소드 (여기서 JWT를 발급하면 됨)
+
+    // 로그인 성공 시 실행
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
-        System.out.println("success");
+
+        // 1. 유저 정보 꺼내기
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        String id = customUserDetails.getUsername();
+
+        // 2. 역할(Role) 꺼내기
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+        GrantedAuthority auth = iterator.next();
+        String role = auth.getAuthority();
+
+        // 3. 토큰 생성 (10시간 유효)
+        String token = jwtUtil.createJwt(id, role, 60*60*1000*10L);
+
+        // ★★★ [수정됨] "Bearer " 다음에 띄어쓰기를 꼭 넣어야 합니다! ★★★
+        response.addHeader("Authorization", "Bearer " + token);
+
+        // 로그 확인용 (콘솔에 찍힙니다)
+        System.out.println("로그인 성공! 헤더에 토큰 담음: " + token);
     }
-    //로그인 실패시 실행하는 메소드
+
+    // 로그인 실패 시 실행
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
-        System.out.println("fail");
+        response.setStatus(401);
+        System.out.println("로그인 실패: " + failed.getMessage());
     }
 }

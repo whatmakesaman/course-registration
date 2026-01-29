@@ -19,6 +19,7 @@ import studio.thinkground.courseregistration.jwt.JWTUtil;
 import studio.thinkground.courseregistration.jwt.loginFilter;
 import studio.thinkground.courseregistration.jwt.JWtFilter;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -57,13 +58,14 @@ public class WebSecurityConfig {
 
                 CorsConfiguration configuration = new CorsConfiguration();
 
-                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                configuration.setAllowedMethods(Collections.singletonList("*"));
-                configuration.setAllowCredentials(true);
+                configuration.setAllowedOriginPatterns(Collections.singletonList("*"));// 인증정보를 가져오면 확인
+                configuration.setAllowedMethods(Collections.singletonList("*")); //get,post 둘 다 받음
+                configuration.setAllowCredentials(true);//토큰 들고오는 것 허용
                 configuration.setAllowedHeaders(Collections.singletonList("*"));
                 configuration.setMaxAge(3600L);
 
-                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                //자바스크립트에서 토큰 꺼내기, 학생인지 관리자인지 구별
+                configuration.setExposedHeaders(Arrays.asList("Authorization","Role"));
 
                 return configuration;
             }
@@ -83,7 +85,7 @@ public class WebSecurityConfig {
                 //누구나 접속 가능한 페이지
                 .requestMatchers("/login","/","/join/**").permitAll()//join은 나중에 수정
                 //관리자만 접속 가능한 페이지
-                    .requestMatchers("/admin/**").hasRole("ADMIN") //** 추가해야 자유롭게 사용 가능
+                    .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") //** 추가해야 자유롭게 사용 가능
                     .requestMatchers("/student/**").hasRole("STUDENT")
                 //그 외 모든 요청, 로그인을 한 상태
                 .anyRequest().authenticated());

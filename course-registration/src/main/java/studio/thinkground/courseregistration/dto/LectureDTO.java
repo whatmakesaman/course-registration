@@ -13,5 +13,5 @@ public class LectureDTO {
     private int credit;
     private String professor;
     private String time;
-    private int max_student;
+    private int maxStudent;
 }

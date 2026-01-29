@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+        /* 헤더 스타일 */
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+        h1 { margin: 0; color: #333; }
+        .logout-btn { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+
+        /* 입력 폼 스타일 */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+
+        /* 버튼 스타일 */
+        .submit-btn { width: 100%; background-color: #2ecc71; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .submit-btn:hover { background-color: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+        <h1>관리자 강의 추가</h1>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+        </header>
+        <div class="content">
+            <h3>새로운 강의 개설</h3>
+            <div class="form-group">
+                <label>강의명</label>
+                <input type="text" id="lectureName" placeholder="알고리즘">
+            </div>
+            <div>
+                <label>교수명</label>
+                <input type="text" id="professorName" placeholder="방영철">
+            </div>
+            <div>
+                <label>학년</label>
+                <input type="text" id="grade">
+            </div>
+            <div>
+                <label>학점</label>
+                <input type="text" id="credit">
+            </div>
+            <div>
+                <label>시간</label>
+                <input type="text" id="time">
+            </div>
+            <div>
+                <label>수강 정원</label>
+                <input type="text" id="maxStudent">
+            </div>
+            <button class="submit-btn" onclick="addLecture()">강의 등록하기</button>
+        </div>
+    </div>
+
+    <script>
+        const token=localStorage.getItem('accessToken');
+        if(!token){
+            alert("로그인이 필요합니다");
+            window.location.replace('login.html');
+        }
+        function logout(){
+            localStorage.removeItem('accessToken');
+            alert("로그아웃 되었습니다");
+            window.location.replace('login.html');
+        }
+        function addLecture(){
+            //1.값 가져오기
+            const lecturename=document.getElementById('lectureName').value;
+            const professor=document.getElementById('professorName').value;
+            const grd=document.getElementById('grade').value;
+            const crd=document.getElementById('credit').value;
+            const t=document.getElementById('time').value;
+            const max=document.getElementById('maxStudent').value;
+
+            //2.유효성 검사
+            if(!lecturename||!professor||!grd||!crd||!t||!max)
+            {
+                alert("모든 정보를 기입하세요");
+                return;
+            }
+            //3.데이터 포장(LectureDTO로 변수명 같아야)
+            const lectureData={
+                lectureName:lecturename,
+                professorName:professor,
+                grade:parseInt(grd),
+                credit:parseInt(crd),
+                time:t,
+                maxStudent:parseInt(max)
+            };
+
+            4.전송
+            fetch('http://localhost:8080/admin/lecture/add' ,{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':token
+                },
+                body:JSON.stringify(lectureData)
+            })
+            .then(response=>{
+                if(response.status===200||response.status===201){
+                    alert("강의 추가 성공");
+                    location.reload();
+                }
+                else if(response.status===403)
+                {
+                    alert("권한이 없습니다")
+                }
+                else{
+                    alert(response.status);
+                }
+            })
+            .catch(error=>{
+                console.error("error:",error);
+                alert("connect error");
+                });
+            }
+
+    </script>
+</body>
+</html>

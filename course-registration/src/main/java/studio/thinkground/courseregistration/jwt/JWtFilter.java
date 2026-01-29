@@ -77,6 +77,7 @@ public class JWtFilter extends OncePerRequestFilter {
         // 7. 스프링 시큐리티 세션에 등록
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        System.out.println("최종 권한 확인: " + authToken.getAuthorities());
 
         filterChain.doFilter(request, response);
     }

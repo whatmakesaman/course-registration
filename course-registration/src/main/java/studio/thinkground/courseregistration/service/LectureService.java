@@ -21,8 +21,7 @@ public class LectureService {
                 lectureDTO.getCredit(),
                 lectureDTO.getGrade(),
                 lectureDTO.getTime(),
-                lectureDTO.getMax_student()
-
+                lectureDTO.getMaxStudent()
         );
         lectureRepository.save(lecture);
     }

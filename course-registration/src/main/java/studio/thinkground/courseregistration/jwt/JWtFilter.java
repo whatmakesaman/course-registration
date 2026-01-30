@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import studio.thinkground.courseregistration.domain.Role;
 import studio.thinkground.courseregistration.dto.CustomUserDetails;
@@ -14,7 +15,7 @@ import studio.thinkground.courseregistration.entity.Admin;
 import studio.thinkground.courseregistration.entity.Student;
 
 import java.io.IOException;
-
+@Component
 public class JWtFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;

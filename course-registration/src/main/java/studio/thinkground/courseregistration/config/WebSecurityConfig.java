@@ -83,12 +83,15 @@ public class WebSecurityConfig {
         //경로별 인가
         http.authorizeHttpRequests((auth)->auth
                 //누구나 접속 가능한 페이지
-                .requestMatchers("/login","/","/join/**").permitAll()//join은 나중에 수정
+                .requestMatchers("/enrollment","/login","/","/join/**").permitAll()//join은 나중에 수정
                 //관리자만 접속 가능한 페이지
                     .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") //** 추가해야 자유롭게 사용 가능
                     .requestMatchers("/student/**").hasRole("STUDENT")
                 //그 외 모든 요청, 로그인을 한 상태
                 .anyRequest().authenticated());
+
+        loginFilter loginFilter=new loginFilter(authenticationManager(authenticationConfiguration),jwtUtil);
+        loginFilter.setFilterProcessesUrl("/login"); // login 주소로 온 것만 건드림
 
         http.addFilterBefore(new JWtFilter(jwtUtil), loginFilter.class);
         http.addFilterAt(new loginFilter(authenticationManager(authenticationConfiguration),jwtUtil), UsernamePasswordAuthenticationFilter.class);

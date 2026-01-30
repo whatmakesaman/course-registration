@@ -5,4 +5,5 @@ import studio.thinkground.courseregistration.entity.Lecture;
 
 
 public interface LectureRepository extends JpaRepository<Lecture,Long> {
+
 }

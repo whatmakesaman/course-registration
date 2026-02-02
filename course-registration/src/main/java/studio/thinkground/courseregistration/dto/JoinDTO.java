@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Setter
 @ResponseBody
 public class JoinDTO {
-    private String id; // 변수명만 id, 실제로 studentNumber,loginId
+    private String loginId; // 변수명만 id, 실제로 studentNumber,loginId
     private String password;
+    private String name;
+    private String role;
 }

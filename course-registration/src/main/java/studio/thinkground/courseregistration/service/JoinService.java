@@ -21,34 +21,36 @@ public class JoinService {
 
     public void joinStudent(JoinDTO joinDTO)
     {
-        String id= joinDTO.getId();
+        String id= joinDTO.getLoginId();
         String password= joinDTO.getPassword();
+        String name= joinDTO.getName();
 
         if(studentRepository.existsByStudentNumber(id))
         {
-            return;
+            throw new RuntimeException("이미 존재하는 계정입니다");
         }
+        //DB에 넣을 객체 생성
         Student data=Student.builder()
                 .studentNumber(id)
                 .password(bCryptPasswordEncoder.encode(password))
-                .name("bjh")
+                .name(name)
                 .role(Role.ROLE_STUDENT)
                 .build();
         studentRepository.save(data);
     }
     public void joinAdmin(JoinDTO joinDTO)
     {
-        String id= joinDTO.getId();
+        String id= joinDTO.getLoginId();
         String password= joinDTO.getPassword();
-
+        String name= joinDTO.getName();
         if(adminRepository.existsByLoginId(id)){
-            return;
+            throw new RuntimeException("이미 존재하는 계정입니다");
         }
         Admin data=Admin.builder()
                 .loginId(id)
                 .password(bCryptPasswordEncoder.encode(password))
                 .role(Role.ROLE_ADMIN)
-                .name("admin")
+                .name(name)
                 .build();
         adminRepository.save(data);
 

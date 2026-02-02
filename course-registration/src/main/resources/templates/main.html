@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"> <head>
+    <meta charset="UTF-8">
+    <title>수강신청 시스템</title>
+    <style>
+        /* 스타일은 그대로 유지 */
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h2 { border-left: 5px solid #0056b3; padding-left: 10px; color: #333; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th { background-color: #f0f2f5; color: #333; padding: 10px; border: 1px solid #ddd; font-size: 14px; }
+        td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
+        .btn-apply { background-color: #0056b3; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+        .btn-apply:hover { background-color: #004494; }
+        .summary { background-color: #fff; padding: 15px; border-radius: 5px; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .total-credit { color: #d6336c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📖 개설 과목 조회</h2>
+    <table>
+        <thead>
+        <tr>
+            <th style="width:60px">신청</th>
+            <th>학과</th>
+            <th>교과목명</th>
+            <th>담당교수</th>
+            <th>학점</th>
+            <th>강의시간</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="lecture : ${lectures}">
+            <td>
+                <button class="btn-apply"
+                        th:onclick="'applyCourse(' + ${lecture.id} + ')'">신청</button>
+            </td>
+            <td>컴퓨터공학</td> <td th:text="${lecture.lectureName}" style="font-weight:bold; text-align:left; padding-left:20px;">강의명</td>
+            <td th:text="${lecture.professor}">교수님</td>
+            <td th:text="${lecture.grade} + '학년'">1학년</td>
+            <td th:text="${lecture.credit} + '학점'">3학점</td>
+        </tr>
+
+        <tr th:if="${#lists.isEmpty(lectures)}">
+            <td colspan="6" style="padding: 30px; color: #999;">
+                현재 개설된 강의가 없습니다.
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>🎒 수강 신청 내역 (희망교과목)</h2>
+    <div class="summary">
+        <span>현재 신청 과목 수: <span id="count">0</span>과목</span>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th style="width: 60px">삭제</th>
+            <th>교과목명</th>
+            <th>담당교수</th>
+            <th>학점</th>
+        </tr>
+        </thead>
+        <tbody id="my-course-list">
+        <tr>
+            <td colspan="4" style="color: #999;">수강 신청 내역 기능은 준비 중입니다.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // ★ 복잡한 fetch 로딩 코드는 다 삭제했습니다!
+    // Controller가 이미 데이터를 다 가져왔기 때문입니다.
+
+    // 수강신청 버튼 눌렀을 때 실행되는 함수
+    function applyCourse(id) {
+        alert("강의 ID: " + id + "번 신청을 시도합니다.\n(아직 신청 기능은 연결되지 않았습니다!)");
+
+        // 나중에 여기에 fetch('/enrollment') 코드를 넣으면 됩니다.
+    }
+</script>
+
+</body>
+</html>

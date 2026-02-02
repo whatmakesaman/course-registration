@@ -2,6 +2,7 @@ package studio.thinkground.courseregistration.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,21 +28,40 @@ public class JWtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        String token=null;
         // 1. 헤더에서 토큰 꺼내기
         String authorization = request.getHeader("Authorization");
 
-        // 2. 토큰이 없거나, "Bearer "로 시작하지 않으면 통과 (로그인 안 된 상태)
-        // [수정] "Bearer" -> "Bearer " (띄어쓰기 추가)
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            System.out.println("token null or invalid header");
-            filterChain.doFilter(request, response);
+      //헤더 검사
+        if(authorization!=null && authorization.startsWith("Bearer "))
+        {
+            token=authorization.split(" ")[1];
+        }
+
+        //헤더에 토큰이 없으면 쿠키 뒤지기
+        if(token==null)
+        {
+            Cookie[] cookies= request.getCookies();
+            if(cookies!=null)
+            {
+                for(Cookie cookie:cookies)
+                {
+                    if(cookie.getName().equals("Authorization"))
+                    {
+                        token= cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+       //헤더도 없고, 쿠키도 없을 시 >>>>> 로그인 안 한 사용자
+        if(token==null)
+        {
+            System.out.println("토큰이 없습니다");
+            filterChain.doFilter(request,response);
             return;
         }
 
-        System.out.println("authorization valid");
-
-        // 3. 토큰만 추출 ("Bearer " 제거)
-        String token = authorization.split(" ")[1];
 
         // 4. 만료 확인
         if (jwtUtil.isExpired(token)) {
@@ -62,7 +82,6 @@ public class JWtFilter extends OncePerRequestFilter {
             admin.setLoginId(username); // Admin 엔티티에 setLoginId가 있어야 함
             admin.setPassword("temppassword");
             admin.setRole(Role.ROLE_ADMIN); // Role Enum 사용
-
             // CustomUserDetails에 Admin을 받는 생성자가 있어야 함
             customUserDetails = new CustomUserDetails(admin);
         } else {
@@ -78,8 +97,7 @@ public class JWtFilter extends OncePerRequestFilter {
         // 7. 스프링 시큐리티 세션에 등록
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        System.out.println("최종 권한 확인: " + authToken.getAuthorities());
-
+        System.out.println("인증 성공: " + username + " (" + role + ")");
         filterChain.doFilter(request, response);
     }
 }

@@ -18,7 +18,7 @@ public class Lecture {
     @Column(name="lecture_id")//DB에서는 lecture_id라 쓰고 싶어서
     private Long id;
 
-    private String grade;
+    private int grade;
     private String lectureName;
     private int credit;
     private String professor;
@@ -27,7 +27,7 @@ public class Lecture {
 
     private int currentCount=0;
 
-    public Lecture(String grade, String lectureName, int credit, String professor, String time, int max_student) {
+    public Lecture(int grade, String lectureName, int credit, String professor, String time, int max_student) {
         this.grade = grade;
         this.lectureName = lectureName;
         this.credit = credit;
@@ -43,5 +43,9 @@ public class Lecture {
             throw new IllegalArgumentException("이미 마감된 강의입니다");
         }
         this.currentCount++;
+    }
+    //강의 취소
+    public void decreaseCount(){
+        this.currentCount--;
     }
 }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 페이지</title>
+    <style>
+        /* 기존 스타일 유지 */
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+
+        /* 테이블 스타일 추가 */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #eee; }
+
+        /* 입력 폼 스타일 */
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { width: 100%; background-color: #2ecc71; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background-color: #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>📋 현재 개설된 강의 목록</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>No</th>
+            <th>강의명</th>
+            <th>교수님</th>
+            <th>시간</th>
+            <th>신청현황</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="lecture : ${lectures}">
+            <td th:text="${lecture.id}">1</td>
+            <td th:text="${lecture.lectureName}">알고리즘</td>
+            <td th:text="${lecture.professor}">방영철</td>
+            <td th:text="${lecture.time}">월 1교시</td>
+            <td>
+                <span th:text="${lecture.currentCount}">0</span> /
+                <span th:text="${lecture.maxStudent}">50</span>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(lectures)}">
+            <td colspan="5">등록된 강의가 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>➕ 새 강의 등록</h3>
+
+    <form action="/admin/lectures" method="post">
+        <div class="form-row">
+            <input type="text" name="lectureName" placeholder="강의명 (예: 자바)" required>
+            <input type="text" name="professor" placeholder="교수명" required>
+        </div>
+        <div class="form-row">
+            <input type="number" name="grade" placeholder="학년" required>
+            <input type="number" name="credit" placeholder="학점" required>
+        </div>
+        <div class="form-row">
+            <input type="text" name="time" placeholder="시간 (예: 월3)" required>
+            <input type="number" name="maxStudent" placeholder="정원" required>
+        </div>
+
+        <button type="submit" class="btn">강의 등록하기</button>
+    </form>
+
+</div>
+
+</body>
+</html>

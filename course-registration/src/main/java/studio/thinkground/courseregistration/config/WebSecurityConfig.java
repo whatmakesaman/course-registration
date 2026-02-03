@@ -89,7 +89,13 @@ public class WebSecurityConfig {
                     .requestMatchers("/student/**").hasRole("STUDENT")
                 //그 외 모든 요청, 로그인을 한 상태
                 .anyRequest().permitAll());
-
+        //로그아웃
+        http.logout((logout)->logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.html")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+        );
         loginFilter loginFilter=new loginFilter(authenticationManager(authenticationConfiguration),jwtUtil);
         loginFilter.setFilterProcessesUrl("/login"); // login 주소로 온 것만 건드림
 

@@ -1,17 +1,36 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"> <head>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
     <meta charset="UTF-8">
     <title>수강신청 시스템</title>
     <style>
-        /* 스타일은 그대로 유지 */
+        /* 기존 스타일 유지 */
         body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; }
-        h2 { border-left: 5px solid #0056b3; padding-left: 10px; color: #333; margin-bottom: 15px; }
+
+        /* 헤더 박스 스타일 (제목 + 로그아웃 버튼) */
+        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .header-box h2 { border-left: 5px solid #0056b3; padding-left: 10px; color: #333; margin: 0; }
+
         table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         th { background-color: #f0f2f5; color: #333; padding: 10px; border: 1px solid #ddd; font-size: 14px; }
         td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
+
+        /* 버튼 스타일 */
         .btn-apply { background-color: #0056b3; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
         .btn-apply:hover { background-color: #004494; }
+
+        /* 마감된 강의 버튼 스타일 */
+        .btn-disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-disabled:hover { background-color: #ccc; }
+
+        .btn-delete { background-color: #ff6b6b; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+        .btn-delete:hover { background-color: #fa5252; }
+
+        /* 로그아웃 버튼 스타일 */
+        .btn-logout { background-color: #6c757d; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 10px;}
+        .btn-logout:hover { background-color: #5a6268; }
+
         .summary { background-color: #fff; padding: 15px; border-radius: 5px; margin-bottom: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .total-credit { color: #d6336c; }
     </style>
@@ -19,7 +38,17 @@
 <body>
 
 <div class="container">
-    <h2>📖 개설 과목 조회</h2>
+
+    <div class="header-box">
+        <h2>📖 개설 과목 조회</h2>
+        <div>
+            <span style="color: #555; font-weight: bold;">
+                <span th:text="${#authentication?.name}">사용자</span>님 환영합니다!
+            </span>
+            <button onclick="logout()" class="btn-logout">로그아웃</button>
+        </div>
+    </div>
+
     <table>
         <thead>
         <tr>
@@ -29,60 +58,168 @@
             <th>담당교수</th>
             <th>학점</th>
             <th>강의시간</th>
+            <th>신청/정원</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="lecture : ${lectures}">
             <td>
                 <button class="btn-apply"
+                        th:if="${lecture.currentCount < lecture.maxStudent}"
                         th:onclick="'applyCourse(' + ${lecture.id} + ')'">신청</button>
+
+                <button class="btn-apply btn-disabled"
+                        th:unless="${lecture.currentCount < lecture.maxStudent}"
+                        disabled>마감</button>
             </td>
-            <td>컴퓨터공학</td> <td th:text="${lecture.lectureName}" style="font-weight:bold; text-align:left; padding-left:20px;">강의명</td>
-            <td th:text="${lecture.professor}">교수님</td>
-            <td th:text="${lecture.grade} + '학년'">1학년</td>
-            <td th:text="${lecture.credit} + '학점'">3학점</td>
+            <td>컴퓨터공학</td>
+            <td th:text="${lecture.lectureName}" style="font-weight:bold; text-align:left; padding-left:20px;"></td>
+            <td th:text="${lecture.professor}"></td>
+            <td th:text="${lecture.credit} + '학점'"></td>
+            <td th:text="${lecture.time != null ? lecture.time : '월 1,2'}"></td>
+            <td>
+                <span th:text="${lecture.currentCount}"></span> / <span th:text="${lecture.maxStudent}"></span>
+            </td>
         </tr>
 
         <tr th:if="${#lists.isEmpty(lectures)}">
-            <td colspan="6" style="padding: 30px; color: #999;">
-                현재 개설된 강의가 없습니다.
-            </td>
+            <td colspan="7" style="padding: 30px; color: #999;">현재 개설된 강의가 없습니다.</td>
         </tr>
         </tbody>
     </table>
 
     <h2>🎒 수강 신청 내역 (희망교과목)</h2>
+
     <div class="summary">
-        <span>현재 신청 과목 수: <span id="count">0</span>과목</span>
+        <span>현재 신청 과목 수: <span th:text="${myLectures != null ? #lists.size(myLectures) : 0}">0</span>과목</span>
+        <span class="total-credit">총 신청 학점: <span id="totalCredit">0</span>학점 / 21학점</span>
     </div>
+
     <table>
         <thead>
         <tr>
             <th style="width: 60px">삭제</th>
+            <th>학과</th>
             <th>교과목명</th>
             <th>담당교수</th>
             <th>학점</th>
+            <th>강의시간</th>
         </tr>
         </thead>
-        <tbody id="my-course-list">
-        <tr>
-            <td colspan="4" style="color: #999;">수강 신청 내역 기능은 준비 중입니다.</td>
+        <tbody>
+        <tr th:each="myLecture : ${myLectures}">
+            <td>
+                <button class="btn-delete"
+                        th:onclick="'cancelCourse(' + ${myLecture.id} + ')'">삭제</button>
+            </td>
+            <td>컴퓨터공학</td>
+            <td th:text="${myLecture.lectureName}" style="font-weight:bold; text-align:left; padding-left:20px;"></td>
+            <td th:text="${myLecture.professor}"></td>
+            <td class="credit-val" th:text="${myLecture.credit}">3</td>
+            <td th:text="${myLecture.time != null ? myLecture.time : '월 1,2'}"></td>
+        </tr>
+
+        <tr th:if="${myLectures == null or #lists.isEmpty(myLectures)}">
+            <td colspan="6" style="padding: 30px; color: #999;">신청한 강의가 없습니다.</td>
         </tr>
         </tbody>
     </table>
 </div>
 
 <script>
-    // ★ 복잡한 fetch 로딩 코드는 다 삭제했습니다!
-    // Controller가 이미 데이터를 다 가져왔기 때문입니다.
+    // 1. 페이지 열리자마자 총 학점 계산하기
+    document.addEventListener("DOMContentLoaded", function() {
+        let total = 0;
+        document.querySelectorAll('.credit-val').forEach(td => {
+            total += parseInt(td.innerText);
+        });
+        document.getElementById('totalCredit').innerText = total;
+    });
 
-    // 수강신청 버튼 눌렀을 때 실행되는 함수
+    // 2. 수강 신청 함수
     function applyCourse(id) {
-        alert("강의 ID: " + id + "번 신청을 시도합니다.\n(아직 신청 기능은 연결되지 않았습니다!)");
+        if(!confirm("이 강의를 수강 신청하시겠습니까?")) return;
 
-        // 나중에 여기에 fetch('/enrollment') 코드를 넣으면 됩니다.
+        const token = localStorage.getItem("Authorization");
+
+        fetch('/enrollment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({ lectureId: id.toString() })
+        })
+        .then(async response => {
+            if (response.ok) {
+                return response.text();
+            } else {
+                const errorMessage = await response.text();
+                throw new Error(errorMessage);
+            }
+        })
+        .then(message => {
+            alert(message);
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message);
+        });
+    }
+
+    // 3. 수강 취소 함수
+    function cancelCourse(id) {
+        if(!confirm("정말 수강을 취소하시겠습니까?")) return;
+
+        const token = localStorage.getItem("Authorization");
+
+        fetch('/enrollment', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({ lectureId: id.toString() })
+        })
+        .then(async response => {
+            if (response.ok) {
+                return response.text();
+            } else {
+                const errorMessage = await response.text();
+                throw new Error(errorMessage);
+            }
+        })
+        .then(message => {
+            alert(message);
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message);
+        });
+    }
+
+    // 4. 로그아웃 함수 (쿠키 삭제 추가됨!)
+    function logout() {
+        if(!confirm("로그아웃 하시겠습니까?")) return;
+
+        // 로컬 스토리지 삭제
+        localStorage.removeItem("Authorization");
+        localStorage.removeItem("access_token");
+
+        // ★ [핵심] 쿠키 삭제 (만료시간 0으로 설정하여 즉시 삭제)
+        document.cookie = "Authorization=; path=/; max-age=0";
+
+        // 서버 로그아웃 호출 및 이동
+        fetch('/logout', { method: 'POST' })
+            .then(() => {
+                location.href = "/login.html";
+            })
+            .catch(() => {
+                location.href = "/login.html";
+            });
     }
 </script>
-
 </body>
 </html>

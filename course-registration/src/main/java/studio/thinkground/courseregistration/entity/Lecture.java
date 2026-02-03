@@ -46,6 +46,8 @@ public class Lecture {
     }
     //강의 취소
     public void decreaseCount(){
-        this.currentCount--;
+        if(this.currentCount>0) {
+            this.currentCount--;
+        }
     }
 }

@@ -43,7 +43,10 @@ dependencies {
     // 5. 테스트 (기본 포함)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test' // 시큐리티 테스트용
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
+
 
 tasks.named('test') {
     useJUnitPlatform()

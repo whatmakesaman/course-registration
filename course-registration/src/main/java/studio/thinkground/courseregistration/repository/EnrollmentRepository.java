@@ -7,10 +7,12 @@ import studio.thinkground.courseregistration.entity.Member;
 import studio.thinkground.courseregistration.entity.Student;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EnrollmentRepository extends JpaRepository<Enrollment,Long> {
 
     boolean existsByMemberAndLecture(Member member, Lecture lecture);
     List<Enrollment> findAllByMemberId(Long memberId);
+    Optional<Enrollment> findByMemberAndLecture(Member member,Lecture lecture);
 
 }

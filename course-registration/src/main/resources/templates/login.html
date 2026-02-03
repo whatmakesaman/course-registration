@@ -2,73 +2,40 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>수강신청 로그인</title>
+  <title>로그인</title>
   <style>
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #f0f2f5;
-        margin: 0;
+        display: flex; justify-content: center; align-items: center; height: 100vh;
+        background-color: #f0f2f5; margin: 0;
     }
     .login-box {
-        background: white;
-        padding: 40px;
-        border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        width: 320px;
-        text-align: center;
+        background: white; padding: 40px; border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 320px; text-align: center;
     }
     h2 { color: #333; margin-bottom: 30px; }
     input {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-sizing: border-box;
-        font-size: 14px;
+        width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd;
+        border-radius: 8px; box-sizing: border-box; font-size: 14px;
     }
     input:focus { outline: none; border-color: #007bff; }
     button {
-        width: 100%;
-        padding: 12px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
+        width: 100%; padding: 12px; background-color: #007bff; color: white;
+        border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;
         transition: background 0.3s;
     }
     button:hover { background-color: #0056b3; }
-
-    /* ▼▼▼ [추가된 부분] 회원가입 링크 스타일 ▼▼▼ */
-    .join-link {
-        margin-top: 20px;
-        font-size: 14px;
-        color: #666;
-    }
-    .join-link a {
-        color: #007bff;
-        text-decoration: none;
-        font-weight: bold;
-        margin-left: 5px;
-    }
-    .join-link a:hover {
-        text-decoration: underline;
-    }
+    .join-link { margin-top: 20px; font-size: 14px; color: #666; }
+    .join-link a { color: #007bff; text-decoration: none; font-weight: bold; margin-left: 5px; }
+    .join-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
 <div class="login-box">
-  <h2>로그인</h2>
+  <h2>🔐 로그인</h2>
   <form id="loginForm">
-    <input type="text" id="username" placeholder="아이디" required>
+    <input type="text" id="username" placeholder="아이디 (학번)" required>
     <input type="password" id="password" placeholder="비밀번호" required>
     <button type="submit">로그인</button>
   </form>
@@ -83,47 +50,61 @@
   const loginForm = document.getElementById('loginForm');
 
   loginForm.addEventListener('submit', function(e) {
-      e.preventDefault(); // 새로고침 막기
+      e.preventDefault(); // 폼이 멋대로 새로고침 되는 것 방지
 
       const usernameVal = document.getElementById('username').value;
       const passwordVal = document.getElementById('password').value;
 
-      // (삭제) formData 부분은 이제 JSON을 쓰니까 필요 없습니다.
-
-      // 서버 전송
-      fetch('http://localhost:8080/api/login', {
+      // 1. 서버로 JSON 데이터 전송
+      // SecurityConfig에서 .loginProcessingUrl("/login")으로 설정된 주소
+      fetch('/login', {
           method: 'POST',
           headers: {
-              'Content-Type': 'application/json' // JSON으로 보낸다고 명시
+              'Content-Type': 'application/json' // "나 JSON 보낸다!"라고 알림
           },
-          // ▼▼▼ [수정] stringfy -> stringify (오타 수정!) ▼▼▼
           body: JSON.stringify({
-              loginId: usernameVal, // Controller가 "loginId"를 찾으므로 이름 맞춤
+              username: usernameVal, // LoginFilter가 map.get("username")으로 찾음
               password: passwordVal
           })
       })
-      .then(response => response.json()) // 서버가 준 JSON(Map) 받기
-      .then(result => {
-            // Controller에서 보낸 message 확인
-            if(result.message === "성공") {
-                alert(result.name + "님 환영합니다");
+      .then(response => {
+          if (response.ok) {
+              // 2. 헤더에서 토큰과 역할 꺼내기
+              const token = response.headers.get("Authorization");
+              const role = response.headers.get("Role");
 
-                // 토큰 저장
-                localStorage.setItem('accessToken', result.token);
+              if (!token) {
+                  alert("서버 오류: 토큰을 받지 못했습니다.");
+                  return;
+              }
 
-                // 역할별 이동
-                if(result.role === "ADMIN" || result.role === "ROLE_ADMIN") {
-                    location.href = '/admin';
-                } else {
-                    location.href = '/main';
-                }
-            } else {
-                alert("로그인 실패! 아이디/비번을 확인하세요.");
-            }
+              // 3. 로컬 스토리지 저장 (API 호출용)
+              localStorage.setItem('Authorization', token);
+
+              // 4. ★ [핵심] 쿠키 저장 (페이지 이동 시 Thymeleaf 에러 방지용)
+              // "Bearer " 글자를 빼고 순수 토큰만 저장해야 필터가 잘 인식함
+              const cleanToken = token.replace("Bearer ", "");
+
+              // 쿠키 굽기 (만료시간 1시간)
+              document.cookie = `Authorization=${cleanToken}; path=/; max-age=3600`;
+
+              // 5. 역할에 따라 페이지 이동
+              alert("로그인 성공!");
+
+              if(role === "ROLE_ADMIN") {
+                  location.href = '/admin/lectures'; // 관리자 페이지 (주소 확인 필요)
+              } else {
+                  location.href = '/main'; // 학생 메인 페이지
+              }
+
+          } else {
+              // 401 Unauthorized 에러 시
+              alert("로그인 실패! 아이디와 비밀번호를 확인해주세요.");
+          }
       })
       .catch(error => {
-          console.error("에러 상세 내용:", error);
-          alert("서버 연결 실패!");
+          console.error("에러 발생:", error);
+          alert("서버 연결에 실패했습니다.");
       });
   });
 </script>

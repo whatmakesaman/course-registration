@@ -1,5 +1,6 @@
 package studio.thinkground.courseregistration.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper; // ★ 추가
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,8 +12,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import studio.thinkground.courseregistration.dto.CustomUserDetails;
 
+import java.io.IOException; // ★ 추가
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map; // ★ 추가
 
 public class loginFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -27,38 +30,50 @@ public class loginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
-        // 1. 요청에서 아이디, 비번 추출
-        String id = obtainUsername(request);
-        String password = obtainPassword(request);
+        try {
+            // ★ [수정됨] JSON 데이터를 읽기 위해 ObjectMapper 사용
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> loginData = objectMapper.readValue(request.getInputStream(), Map.class);
 
-        // 2. 스프링 시큐리티에게 검증 요청
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(id, password, null);
+            // HTML에서 보낸 키값("username", "password")과 일치해야 함
+            String id = loginData.get("username");
+            String password = loginData.get("password");
 
-        return authenticationManager.authenticate(authToken);
+            System.out.println("====== [LoginFilter] 로그인 시도 ======");
+            System.out.println("ID: " + id);
+            System.out.println("PW: " + password);
+
+            if (id == null || password == null) {
+                throw new RuntimeException("ID 또는 비밀번호가 전달되지 않았습니다.");
+            }
+
+            // 스프링 시큐리티에게 검증 요청
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(id, password, null);
+
+            return authenticationManager.authenticate(authToken);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // 로그인 성공 시 실행
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
-        // 1. 유저 정보 꺼내기
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         String id = customUserDetails.getUsername();
 
-        // 2. 역할(Role) 꺼내기
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        // 3. 토큰 생성 (10시간 유효)
         String token = jwtUtil.createJwt(id, role, 60*60*1000*10L);
 
         response.addHeader("Authorization", "Bearer " + token);
+        response.addHeader("Role", role);
 
-        //학생,관리자 로그인이 다르니 역할 구분
-        response.addHeader("Role",role);
-        // 로그 확인용 (콘솔에 찍힙니다)
         System.out.println("로그인 성공! 헤더에 토큰 담음: " + token);
     }
 

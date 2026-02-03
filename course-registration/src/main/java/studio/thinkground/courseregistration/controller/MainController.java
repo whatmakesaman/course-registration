@@ -1,54 +1,63 @@
 package studio.thinkground.courseregistration.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import studio.thinkground.courseregistration.dto.LectureDTO;
-import studio.thinkground.courseregistration.entity.Lecture;
+import studio.thinkground.courseregistration.dto.LectureDTO; // DTO 사용 확인
+import studio.thinkground.courseregistration.service.EnrollmentService;
 import studio.thinkground.courseregistration.service.LectureService;
 
+import java.util.ArrayList; // 리스트 사용을 위해 추가
 import java.util.List;
 
-//타임리프를 쓰면 html안에 적힌 변수를 자바가 실제 값으로 바꿔야 함
 @Controller
 @RequiredArgsConstructor
 public class MainController {
 
     private final LectureService lectureService;
-    //localhost:8080/ 이라고 쳤을 때
-    @GetMapping("/")
-    public String root(){
-        return "login";  //templates/main.html 보여줘라
-    }
-    //localhost:8080/login, 로그인 후 메인 화면
-    @GetMapping("/main")
-    public String mainPage(){
-        return "main";
-    }
+    private final EnrollmentService enrollmentService;
 
-    //회원가입 화면,    localhost:8080/join
     @GetMapping("/join")
     public String joinPage(){
-        return "join";  // join.html을 보여줘라
+        return "join";
     }
 
-
-    //localhost:8080/login 접속 시
     @GetMapping("/login")
     public String loginPage(){
         return "login";
-
     }
-    //학생 메인 페이지
+
     @GetMapping("/main")
     public String mainPage(Model model){
 
-        //서비스에서 강의 목록 가져옴
-        List<LectureDTO> lectures=lectureService.getAllLectures();
-        //"lectures"이름 붙여서 html로 배달
-        model.addAttribute("lectures",lectures);
+        // 1. 전체 강의 목록 가져오기
+        List<LectureDTO> lectures = lectureService.getAllLectures();
+        model.addAttribute("lectures", lectures);
+
+        // 2. 현재 로그인한 사용자 아이디 확인
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String loginId = auth.getName();
+
+        // 3. 내 신청 목록 가져오기 (안전 장치 추가)
+        List<LectureDTO> myLectures = new ArrayList<>(); // 일단 빈 리스트로 초기화
+
+        if(loginId != null && !loginId.equals("anonymousUser")) {
+            try {
+                // 서비스에서 목록 가져오기 시도
+                myLectures = enrollmentService.getMyLectures(loginId);
+            } catch(Exception e) {
+                // 에러가 나면 콘솔에 이유를 출력하고, myLectures는 빈 리스트인 채로 둠
+                e.printStackTrace();
+                System.out.println("내 강의 목록 불러오기 실패: " + e.getMessage());
+            }
+        }
+
+        // ★ [핵심] 리스트가 비어있어도 모델에 꼭 넣어야 500 에러가 안 남!
+        model.addAttribute("myLectures", myLectures);
+
         return "main";
     }
-
 }

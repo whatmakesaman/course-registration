@@ -2,6 +2,7 @@ package studio.thinkground.courseregistration.controller;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -21,23 +22,39 @@ public class EnrollmentController {
     private final MemberRepository memberRepository;
 
     @PostMapping("/enrollment")
-    public String enroll(@RequestBody Map<String, String>params)
-    {
-        //프론트에서 보낸 강의 ID꺼내기(json)
-        String lectureIdStr= params.get("lectureId");
-        Long lectureId=Long.parseLong(lectureIdStr);
-        //토큰에서 누가 로그인했는지 아이디 꺼내기
-        Authentication auth=SecurityContextHolder.getContext().getAuthentication();
-        String loginId= auth.getName();
-        //loginId로 진짜 회원 정보 찾기
-        Member member=memberRepository.findByLoginId(loginId)
-                .orElseThrow(()->new IllegalArgumentException("회원 정보를 찾을 수 없습니다"));
+    public ResponseEntity<String> enroll(@RequestBody Map<String, String>params) {
+        try {
+            //프론트에서 보낸 강의 ID꺼내기(json)
+            String lectureIdStr = params.get("lectureId");
+            Long lectureId = Long.parseLong(lectureIdStr);
+            //토큰에서 누가 로그인했는지 아이디 꺼내기
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String loginId = auth.getName();
 
-
-        //수강신청 서비스
-        enrollmentService.enroll(loginId, lectureId);
-        return "수강신청 완료";
+            //수강신청 서비스
+            enrollmentService.enroll(loginId, lectureId);
+            return ResponseEntity.ok("수강신청 완료");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+    @DeleteMapping("/enrollment")
+    public ResponseEntity<String> cancel(@RequestBody Map<String,String> params) {
+        try {
+            String lectureIdStr = params.get("lectureId");
+            Long lectureId = Long.parseLong(lectureIdStr);
 
+            //로그인한 사람 ID
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String loginId = auth.getName();
+
+            //취소
+            enrollmentService.cancel(loginId, lectureId);
+
+            return ResponseEntity.ok("수강취소 완료");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
 }

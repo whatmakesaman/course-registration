@@ -29,7 +29,9 @@ public class EnrollmentService {
     public void enroll(String loginId, Long lectureId) {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
-        Lecture lecture = lectureRepository.findById(lectureId)
+
+        //변경: 락을 걸고 조회(줄 서서 들어옴) 기존:findById
+        Lecture lecture = lectureRepository.findByIdWithLock(lectureId)
                 .orElseThrow(() -> new IllegalArgumentException("강의가 없습니다"));
 
         // 1. 중복 신청 검사( *****jmeter 테스트를 위하여 잠시 주석 처리*********)

@@ -214,10 +214,10 @@
         // 서버 로그아웃 호출 및 이동
         fetch('/logout', { method: 'POST' })
             .then(() => {
-                location.href = "/login.html";
+                location.href = "/login";
             })
             .catch(() => {
-                location.href = "/login.html";
+                location.href = "/login";
             });
     }
 </script>

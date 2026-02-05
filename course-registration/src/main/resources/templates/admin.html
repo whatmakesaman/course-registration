@@ -38,7 +38,7 @@
         <h2>📋 강의 관리 시스템</h2>
         <div>
             <span style="color: #555; font-weight: bold;">
-                <span th:text="${#authentication.name}">관리자</span>님 (Admin)
+                <span th:text="${#authentication?.name}">관리자</span>님 (Admin)
             </span>
             <button onclick="logout()" class="btn-logout">로그아웃</button>
         </div>
@@ -109,8 +109,8 @@
 
         // 서버 로그아웃 호출 및 이동
         fetch('/logout', { method: 'POST' })
-            .then(() => location.href = "/login.html")
-            .catch(() => location.href = "/login.html");
+            .then(() => location.href = "/login")
+            .catch(() => location.href = "/login");
     }
 
     // 2. 강의 등록 함수

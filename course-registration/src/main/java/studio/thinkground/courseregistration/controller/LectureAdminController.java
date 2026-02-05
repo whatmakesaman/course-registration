@@ -3,10 +3,7 @@ package studio.thinkground.courseregistration.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import studio.thinkground.courseregistration.dto.LectureDTO;
 import studio.thinkground.courseregistration.entity.Lecture;
 import studio.thinkground.courseregistration.repository.LectureRepository;
@@ -22,7 +19,7 @@ public class LectureAdminController {
     private final LectureService lectureService;
 
     // 1. 강의 목록 조회 (GET)
-    @GetMapping("/admin") //admin 요청을 받음
+    @GetMapping("/admin/lectures") //admin 요청을 받음
     public String getLectureListPage(Model model)
     {
         List<LectureDTO> lectures=lectureService.getAllLectures();
@@ -34,12 +31,13 @@ public class LectureAdminController {
 
     // 2. 강의 등록 (POST)
     @PostMapping("/admin/lectures")
-    public String addLecture( LectureDTO lectureDTO) {
+    @ResponseBody
+    public String addLecture(@RequestBody LectureDTO lectureDTO) {
         // 서비스야, 이거 등록해라. (지시만 함)
         lectureService.createLecture(lectureDTO);
 
         //admin.html 파일을 주는 것이 아니라 /admin주소로 다시 접속해라(get 방식)
-        return "redirect:/admin";
+        return "ok";
     }
 
 }

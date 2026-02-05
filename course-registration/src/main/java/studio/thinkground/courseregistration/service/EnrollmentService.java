@@ -32,33 +32,35 @@ public class EnrollmentService {
         Lecture lecture = lectureRepository.findById(lectureId)
                 .orElseThrow(() -> new IllegalArgumentException("강의가 없습니다"));
 
-        // 1. 중복 신청 검사
-        boolean exists = enrollmentRepository.existsByMemberAndLecture(member, lecture);
-        if (exists) {
-            throw new IllegalArgumentException("이미 신청한 강의입니다");
-        }
+        // 1. 중복 신청 검사( *****jmeter 테스트를 위하여 잠시 주석 처리*********)
+//        boolean exists = enrollmentRepository.existsByMemberAndLecture(member, lecture);
+//        if (exists) {
+//            throw new IllegalArgumentException("이미 신청한 강의입니다");
+//        }
 
         // 2. 수강 인원 초과 검사
         if (lecture.getCurrentCount() >= lecture.getMax_student()) {
             throw new IllegalArgumentException("정원 초과입니다.");
         }
 
-        // 3. 학점 초과 검사
-        int currentTotalCredit = 0;
-        List<Enrollment> myEnrollments = member.getEnrollments(); // Member 엔티티 수정 필요
-
-        for (Enrollment enrollment : myEnrollments) {
-            currentTotalCredit += enrollment.getLecture().getCredit();
-        }
-
-        if (currentTotalCredit + lecture.getCredit() > MAX_CREDIT) {
-            throw new IllegalArgumentException("신청 가능 학점을 초과했습니다");
-        }
+//        // 3. 학점 초과 검사 **********jmeter 테스트를 위하여 잠시 주석 처리*********
+//        int currentTotalCredit = 0;
+//        List<Enrollment> myEnrollments = member.getEnrollments(); // Member 엔티티 수정 필요
+//
+//        for (Enrollment enrollment : myEnrollments) {
+//            currentTotalCredit += enrollment.getLecture().getCredit();
+//        }
+//
+//        if (currentTotalCredit + lecture.getCredit() > MAX_CREDIT) {
+//            throw new IllegalArgumentException("신청 가능 학점을 초과했습니다");
+//        }
 
         // 4. 저장
         lecture.increaseCount(); // 수강 인원 증가
-        Enrollment enrollment = new Enrollment(lecture, member); // Enrollment 생성
-        enrollmentRepository.save(enrollment);
+
+        //*********jmeter를 위해 잠시 주석*********
+//        Enrollment enrollment = new Enrollment(lecture, member); // Enrollment 생성
+//        enrollmentRepository.save(enrollment);
     }
 
     // 내 신청 목록 조회
